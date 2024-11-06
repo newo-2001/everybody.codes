@@ -1,0 +1,9 @@
+[package]
+name = "everybody_solves"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+paste = "1.0.15"
+jikan = { git = "https://github.com/newo-2001/jikan" }
+anyhow = "1.0.93"
