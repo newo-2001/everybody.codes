@@ -1,8 +1,12 @@
-use std::collections::HashMap;
+#![feature(iter_array_chunks)]
 
-use jikan::{ExecutionOptions, Puzzle, Solver};
+use std::{collections::HashMap, fs::File};
+
+use jikan::{Puzzle, Solver};
 
 mod solvers_2024;
+
+type SolverResult = jikan::SolverResult<anyhow::Error>;
 
 macro_rules! solver {
     ($year: literal, $day: literal, $part: literal) => {
@@ -13,13 +17,20 @@ macro_rules! solver {
     };
 }
 
-fn main() -> Result<(), jikan::Error> {
-    let options = ExecutionOptions::from_args()?;
+fn main() -> anyhow::Result<()> {
+    let options = jikan::ExecutionOptions::from_args();
+
+    let file = File::open("data.yaml")?;
+    let data = serde_yml::from_reader(file)?;
+
     let solvers: HashMap<Puzzle, Solver<anyhow::Error>> = [
-        solver!(2024, "01", 1)
+        solver!(2024, "01", 1),
+        solver!(2024, "01", 2),
+        solver!(2024, "01", 3)
     ].into_iter().collect();
 
-    jikan::execute(options, &solvers);
+    let manifest = jikan::Manifest { solvers, data };
+    jikan::execute(options, &manifest);
 
     Ok(())
 }
