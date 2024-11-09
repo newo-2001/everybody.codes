@@ -22,7 +22,7 @@ impl Creature {
         }))
     }
 
-    fn cost(self) -> u32 {
+    const fn cost(self) -> u32 {
         match self {
             Self::AncientAnt => 0,
             Self::BadassBeetle => 1,
