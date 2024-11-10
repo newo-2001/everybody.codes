@@ -1,4 +1,7 @@
-#![feature(iter_array_chunks)]
+#![feature(
+    iter_array_chunks,
+    iter_collect_into
+)]
 
 use std::{collections::HashMap, fs::File};
 
@@ -34,7 +37,8 @@ fn main() -> anyhow::Result<()> {
 
     let solvers: HashMap<Puzzle, Solver> = [
         solver!(2024, "01"),
-        solver!(2024, "02", 1)
+        solver!(2024, "02", 1),
+        solver!(2024, "02", 2)
     ].into_iter()
         .flatten()
         .collect();
