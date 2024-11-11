@@ -1,67 +1,95 @@
 use crate::SolverResult;
-use everybody_helps::parsing::{run_parser, ParsingResult};
+use everybody_helps::{iterators::ExtraIter, parsing::{run_parser, ParsingResult}, spatial::{matrix::Matrix, point::Point}};
 use itertools::Itertools;
 use nom::{bytes::complete::tag, character::complete::{alpha1, char, line_ending}, combinator::rest, multi::{count, separated_list0}, sequence::{preceded, separated_pair}, Parser};
 
-struct RunicText<'a>(&'a str);
-
-fn parse_runic_query(input: &str) -> ParsingResult<(Vec<&str>, RunicText)> {
+fn parse_runic_query(input: &str) -> ParsingResult<(Vec<&str>, &str)> {
     separated_pair(
         preceded(
             tag("WORDS:"),
-            separated_list0(
-                char(','),
-                alpha1
-            )
+            separated_list0(char(','), alpha1)
         ),
         count(line_ending, 2),
-        rest.map(RunicText)
+        rest
     ).parse(input)
 }
 
+pub fn solve_part_1(input: &str) -> SolverResult {
+    let (runic_words, runic_text) = run_parser(parse_runic_query, input)?;
+    let runic_word_count = runic_words
+        .into_iter()
+        .flat_map(|word| runic_text.matches(word))
+        .count();
 
-impl<'a> RunicText<'a> {
-    fn runic_words<'b, I>(&self, query: I) -> impl Iterator<Item=&'b str> where
-        I: IntoIterator<Item=&'b str>,
-        'a: 'b
-    {
-        query
-            .into_iter()
-            .flat_map(|word| self.0.matches(word))
-    }
-
-    fn runic_symbol_count<'b>(&self, query: impl IntoIterator<Item=&'b str>) -> usize where
-    {
-        let reversed: String = self.0.chars()
-            .rev()
-            .collect();
-
-        query.into_iter()
-            .flat_map(|word| {
-                let matches = self.0
-                    .match_indices(word)
-                    .flat_map(|(start, word)| start..start + word.len());
-
-                let reverse_matches = reversed
-                    .match_indices(word)
-                    .flat_map(|(start, word)| {
-                        let start = self.0.len() - start - word.len();
-                        start..start + word.len()
-                    });
-
-                matches.chain(reverse_matches)
-            })
-            .unique()
-            .count()
-    }
+    Ok(Box::new(runic_word_count))
 }
 
-pub fn solve_part_1(input: &str) -> SolverResult {
-    let (query, runic_text) = run_parser(parse_runic_query, input)?;
-    Ok(Box::new(runic_text.runic_words(query).count()))
+fn extract_runes<'a>(
+    text: &'a str,
+    runic_words: &'a [&'a str]
+) -> impl Iterator<Item=(usize, usize)> + 'a where {
+    runic_words
+        .iter()
+        .flat_map(|word| text.match_indices(word))
+        .map(|(start, r#match)| (start, r#match.len()))
+}
+
+fn extract_bidirectional_runes<'a>(
+    text: &'a str,
+    runic_words: &'a [&'a str]
+) -> impl Iterator<Item=usize> + 'a {
+    let reversed: String = text.chars().rev().collect();
+
+    extract_runes(reversed.as_str(), runic_words)
+        .map(|(start, length)| (text.len() - start - length, length))
+        .chain(extract_runes(text, runic_words))
+        .flat_map(|(start, length)| start..start + length)
+        .collect_vec()
+        .into_iter()
 }
 
 pub fn solve_part_2(input: &str) -> SolverResult {
-    let (query, runic_text) = run_parser(parse_runic_query, input)?;
-    Ok(Box::new(runic_text.runic_symbol_count(query)))
+    let (runic_words, runic_text) = run_parser(parse_runic_query, input)?;
+
+    let runes = extract_bidirectional_runes(runic_text, &runic_words)
+        .unique()
+        .count();
+
+    Ok(Box::new(runes))
+}
+
+pub fn solve_part_3(input: &str) -> SolverResult {
+    let (runic_words, runic_text) = run_parser(parse_runic_query, input)?;
+
+    let scales: Matrix<char> = runic_text
+        .lines()
+        .map(|line| line.bytes().map(|byte| byte as char))
+        .attempt_collect()?;
+
+    let vertical_runes = scales
+        .iter_cols()
+        .enumerate()
+        .flat_map(|(x, col)| {
+            let str = col.collect::<String>();
+            extract_bidirectional_runes(&str, &runic_words)
+                .map(|y| Point { x, y })
+                .collect_vec()
+        });
+
+    let horizontal_runes = scales
+        .iter_rows()
+        .enumerate()
+        .flat_map(|(y, row)| {
+            let str = String::from_iter(row).repeat(2);
+            extract_bidirectional_runes(&str, &runic_words)
+                .map(|x| Point { x: x % scales.cols(), y })
+                .collect_vec()
+        });
+
+    let runes = horizontal_runes
+        .chain(vertical_runes)
+        .unique()
+        .count();
+
+    Ok(Box::new(runes))
 }

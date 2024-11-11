@@ -25,7 +25,7 @@ macro_rules! solver {
             solver!($year, $day, 1),
             solver!($year, $day, 2),
             solver!($year, $day, 3)
-        ].into_iter().flatten().collect()
+        ].into_iter().flatten()
     }
 }
 
@@ -37,8 +37,7 @@ fn main() -> anyhow::Result<()> {
 
     let solvers: HashMap<Puzzle, Solver> = [
         solver!(2024, "01"),
-        solver!(2024, "02", 1),
-        solver!(2024, "02", 2)
+        solver!(2024, "02")
     ].into_iter()
         .flatten()
         .collect();

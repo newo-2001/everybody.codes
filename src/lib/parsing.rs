@@ -3,7 +3,7 @@ use anyhow::{anyhow, Result};
 
 use crate::tuples::snd;
 
-pub type ParsingError<'a> = nom::error::Error<&'a str>;
+pub type ParsingError<'a> = nom::error::VerboseError<&'a str>;
 pub type ParsingResult<'a, T> = Result<(&'a str, T), nom::Err<ParsingError<'a>>>;
 
 pub trait Parsable<'a>: Sized {
