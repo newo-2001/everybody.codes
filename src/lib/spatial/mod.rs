@@ -1,2 +1,5 @@
 pub mod matrix;
-pub mod point;
+pub mod direction;
+mod point;
+
+pub use point::Point;

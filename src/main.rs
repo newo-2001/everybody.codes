@@ -1,6 +1,5 @@
 #![feature(
-    iter_array_chunks,
-    iter_collect_into
+    iter_array_chunks
 )]
 
 use std::{collections::HashMap, fs::File};
@@ -25,7 +24,9 @@ macro_rules! solver {
             solver!($year, $day, 1),
             solver!($year, $day, 2),
             solver!($year, $day, 3)
-        ].into_iter().flatten()
+        ].into_iter()
+            .flatten()
+            .collect::<Vec<_>>()
     }
 }
 
@@ -37,7 +38,8 @@ fn main() -> anyhow::Result<()> {
 
     let solvers: HashMap<Puzzle, Solver> = [
         solver!(2024, "01"),
-        solver!(2024, "02")
+        solver!(2024, "02"),
+        solver!(2024, "03"),
     ].into_iter()
         .flatten()
         .collect();

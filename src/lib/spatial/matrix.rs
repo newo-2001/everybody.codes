@@ -1,9 +1,10 @@
 use std::ops::{Index, IndexMut};
 
-use itertools::Itertools;
 use thiserror::Error;
 
 use crate::iterators::AttemptFromIterator;
+
+use super::Point;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Matrix<T> {
@@ -17,8 +18,8 @@ pub struct VariableRows;
 
 impl<T, I> AttemptFromIterator<I> for Matrix<T> where
     I: Iterator,
-    I::Item: IntoIterator,
-    <I::Item as IntoIterator>::IntoIter: ExactSizeIterator<Item=T>
+    I::Item: IntoIterator<Item=T>,
+    <I::Item as IntoIterator>::IntoIter: Clone
 {
     type Item = I::Item;
     type Error = VariableRows;
@@ -30,11 +31,12 @@ impl<T, I> AttemptFromIterator<I> for Matrix<T> where
         let data = iter
             .map(|row| {
                 let row = row.into_iter();
+                let length = row.clone().count();
                 match columns {
-                    Some(expected) if expected != row.len() => Err(VariableRows),
+                    Some(expected) if expected != length => Err(VariableRows),
                     Some(_) => Ok(row),
                     None => {
-                        columns = Some(row.len());
+                        columns = Some(length);
                         Ok(row)
                     }
                 }
@@ -52,16 +54,18 @@ impl<T, I> AttemptFromIterator<I> for Matrix<T> where
     }
 }
 
-impl<T> Index<(usize, usize)> for Matrix<T> {
+impl<T> Index<Point<usize>> for Matrix<T> {
     type Output = T;
 
-    fn index(&self, (row, col): (usize, usize)) -> &Self::Output {
-        &self.data[row * self.columns + col]
+    fn index(&self, index: Point<usize>) -> &Self::Output {
+        let Point { x, y } = index;
+        &self.data[y * self.columns + x]
     }
 }
 
-impl<T> IndexMut<(usize, usize)> for Matrix<T> {
-    fn index_mut(&mut self, (row, col): (usize, usize)) -> &mut Self::Output {
+impl<T> IndexMut<Point<usize>> for Matrix<T> {
+    fn index_mut(&mut self, index: Point<usize>) -> &mut Self::Output {
+        let (row, col) = index.into();
         &mut self.data[row * self.columns + col]
     }
 }
@@ -109,6 +113,13 @@ impl<T> Matrix<T> {
         }
     }
 
+    #[must_use]
+    pub fn get(&self, index: Point<usize>) -> Option<&T> {
+        let Point { x, y } = index;
+        (x < self.cols() && y < self.rows())
+            .then(|| self.index(index))
+    }
+
     pub fn iter(&self) -> core::slice::Iter<T> {
         self.data.iter()
     }
@@ -141,20 +152,47 @@ impl<T> Matrix<T> {
 
     #[must_use]
     pub fn into_cols(self) -> IntoRows<T> where T: Clone {
-        self.transpose()
+        self
+            .transpose()
             .into_rows()
     }
 
     #[must_use]
     pub fn transpose(self) -> Self where T: Clone {
         let columns = self.rows();
-        let data = self.iter_cols()
+        let data: Box<[T]> = self
+            .iter_cols()
             .flatten()
             .cloned()
-            .collect_vec()
-            .into_boxed_slice();
+            .collect();
 
         Self { data, columns }
+    }
+
+    pub fn enumerate(&self) -> impl Iterator<Item=(Point<usize>, &T)>{
+        self
+            .iter_rows()
+            .enumerate()
+            .flat_map(|(y, row)| row
+                .iter()
+                .enumerate()
+                .map(move |(x, value)| (Point { x, y }, value))
+            )
+    }
+
+    #[must_use]
+    pub fn map<F>(&self, mapper: F) -> Self where
+        F: Fn((Point<usize>, &T)) -> T
+    {
+        let data: Box<[T]> = self
+            .enumerate()
+            .map(mapper)
+            .collect();
+
+        Self {
+            columns: self.columns,
+            data
+        }
     }
 }
 
