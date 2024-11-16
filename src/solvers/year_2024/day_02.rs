@@ -64,7 +64,7 @@ pub fn solve_part_3(input: &str) -> SolverResult {
     let scales: Matrix<char> = runic_text
         .lines()
         .map(|line| line.bytes().map(|byte| byte as char))
-        .attempt_collect()?;
+        .try_collecting()?;
 
     let vertical_runes = scales
         .iter_cols()

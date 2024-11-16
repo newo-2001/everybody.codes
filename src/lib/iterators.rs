@@ -1,16 +1,16 @@
 pub trait ExtraIter: Iterator + Sized {
-    fn attempt_collect<C>(self) -> Result<C, <C as AttemptFromIterator<Self>>::Error> where
-        C: AttemptFromIterator<Self, Item=Self::Item>
+    fn try_collecting<C>(self) -> Result<C, <C as TryFromIterator<Self>>::Error> where
+        C: TryFromIterator<Self, Item=Self::Item>
     {
-        C::attempt_from_iter(self)
+        C::try_from_iter(self)
     }
 }
 
 impl<I: Iterator + Sized> ExtraIter for I {}
 
-pub trait AttemptFromIterator<I>: Sized {
+pub trait TryFromIterator<I>: Sized {
     type Item;
     type Error;
 
-    fn attempt_from_iter(iter: I) -> Result<Self, Self::Error>;
+    fn try_from_iter(iter: I) -> Result<Self, Self::Error>;
 }

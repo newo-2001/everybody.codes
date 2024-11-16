@@ -2,7 +2,7 @@ use std::ops::{Index, IndexMut};
 
 use thiserror::Error;
 
-use crate::iterators::AttemptFromIterator;
+use crate::iterators::TryFromIterator;
 
 use super::Point;
 
@@ -16,7 +16,7 @@ pub struct Matrix<T> {
 #[error("Cannot construct a matrix from data with variable rows")]
 pub struct VariableRows;
 
-impl<T, I> AttemptFromIterator<I> for Matrix<T> where
+impl<T, I> TryFromIterator<I> for Matrix<T> where
     I: Iterator,
     I::Item: IntoIterator<Item=T>,
     <I::Item as IntoIterator>::IntoIter: Clone
@@ -24,7 +24,7 @@ impl<T, I> AttemptFromIterator<I> for Matrix<T> where
     type Item = I::Item;
     type Error = VariableRows;
 
-    fn attempt_from_iter(iter: I) -> Result<Self, Self::Error> where
+    fn try_from_iter(iter: I) -> Result<Self, Self::Error> where
     {
         let mut columns: Option<usize> = None;
 

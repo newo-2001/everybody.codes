@@ -31,7 +31,7 @@ fn parse_grid(input: &str) -> Result<Matrix<Tile>> {
     
     let grid = run_parser(parser, input)?
         .into_iter()
-        .attempt_collect()?;
+        .try_collecting()?;
 
     Ok(grid)
 }

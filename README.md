@@ -1,0 +1,1 @@
+This repository contains solutions to the [everybody.codes](https://everybody.codes/) programming puzzles written in Rust.
