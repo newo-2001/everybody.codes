@@ -4,6 +4,18 @@ pub trait ExtraIter: Iterator + Sized {
     {
         C::try_from_iter(self)
     }
+
+    fn min_max(self) -> Option<(Self::Item, Self::Item)>
+        where Self::Item: Ord + Copy
+    {
+        self.fold(None, |acc, x| {
+            if let Some((min, max)) = acc {
+                Some((x.min(min), x.max(max)))
+            } else {
+                Some((x, x))
+            }
+        })
+    }
 }
 
 impl<I: Iterator + Sized> ExtraIter for I {}
