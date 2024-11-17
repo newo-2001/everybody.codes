@@ -2,9 +2,9 @@
     iter_array_chunks
 )]
 
-use std::{collections::HashMap, fs::File};
+use std::{collections::HashMap, fs::File, path::Path};
 
-use jikan::Puzzle;
+use jikan::{DataManifest, Day, DayManifest, Puzzle};
 
 mod solvers;
 
@@ -32,9 +32,14 @@ macro_rules! solver {
 
 fn main() -> anyhow::Result<()> {
     let options = jikan::ExecutionOptions::from_args();
-
-    let file = File::open("data.yaml")?;
-    let data = serde_yml::from_reader(file)?;
+    let puzzles: HashMap<Day, DayManifest> = jikan::locate_manifests(Path::new("data"), options.scope)?
+        .into_iter()
+        .map(|(day, path)| {
+            let file = File::open(path)?;
+            let manifest = serde_yml::from_reader(file)?;
+            Ok((day, manifest))
+        })
+        .collect::<anyhow::Result<_>>()?;
 
     let solvers: HashMap<Puzzle, Solver> = [
         solver!(2024, "01"),
@@ -45,7 +50,11 @@ fn main() -> anyhow::Result<()> {
         .flatten()
         .collect();
 
-    let manifest = jikan::Manifest { solvers, data };
+    let manifest = jikan::Manifest {
+        data: DataManifest { puzzles },
+        solvers,
+    };
+
     jikan::execute(options, &manifest);
 
     Ok(())
