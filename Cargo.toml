@@ -13,7 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 paste = "1.0.15"
-jikan = { git = "https://github.com/newo-2001/jikan", features = ["parallel"] }
+jikan = { git = "https://github.com/newo-2001/jikan" }
 anyhow = "1.0.93"
 serde_yml = "0.0.12"
 itertools = "0.13.0"
