@@ -4,7 +4,7 @@
     impl_trait_in_assoc_type
 )]
 
-use std::{collections::HashMap, error::Error, fs::File};
+use std::{error::Error, fs::File};
 
 use jikan::{Day, DayManifest, ManifestProvider, Puzzle};
 
@@ -44,15 +44,16 @@ impl ManifestProvider for Manifests {
 
 fn main() {
     let options = jikan::ExecutionOptions::from_args();
-    let solvers: HashMap<Puzzle, Solver> = [
+    let solvers: ahash::HashMap<Puzzle, Solver> = [
         solver!(2024, "01"),
         solver!(2024, "02"),
         solver!(2024, "03"),
         solver!(2024, "04"),
-        solver!(2024, "05", 1)
+        solver!(2024, "05", 1),
+        solver!(2024, "05", 2)
     ].into_iter()
         .flatten()
         .collect();
 
-    jikan::execute::<Manifests, _, _>(options, &solvers);
+    jikan::execute::<Manifests, _, ahash::RandomState>(options, &solvers);
 }

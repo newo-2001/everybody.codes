@@ -1,8 +1,8 @@
 use std::collections::VecDeque;
 
+use ahash::{HashMap, HashMapExt};
 use anyhow::{anyhow, Result};
 use everybody_helps::{iterators::ExtraIter, parsing::{run_parser, ParsingResult}, spatial::matrix::Matrix};
-use itertools::Itertools;
 use nom::{character::complete::{line_ending, space1, u32}, combinator::map_res, multi::separated_list1, Parser};
 
 use crate::SolverResult;
@@ -14,7 +14,8 @@ fn parse_dance(input: &str) -> ParsingResult<Vec<VecDeque<u32>>> {
             separated_list1(space1, u32)
         ),
         |cols| {
-            let transposed = cols.into_iter()
+            let transposed = cols
+                .into_iter()
                 .try_collecting::<Matrix<u32>>()?
                 .into_cols()
                 .map(|col| col.into_iter().collect())
@@ -38,20 +39,27 @@ fn perform_round(configuration: &mut [VecDeque<u32>], round: usize) -> Result<()
     let mut claps: u32 = 0;
 
     loop {
-        #[allow(clippy::cast_possible_truncation)]
-        let moving_down = claps < column.len() as u32;
-
-        row_num = row_num.checked_add_signed(if moving_down { 1 } else { -1 }).unwrap();
+        let moving_down = claps as usize % (column.len() * 2) < column.len();
 
         claps += 1;
         if claps == clapper {
             let column = &mut configuration[column_num];
-            column.insert(if moving_down { row_num - 1} else { row_num }, clapper);
+            column.insert(if moving_down { row_num } else { row_num + 1 }, clapper);
             break;
         }
+
+        if moving_down && row_num != column.len() - 1 { row_num += 1; }
+        else if !moving_down && row_num != 0 { row_num -= 1; }
     }
 
     Ok(())
+}
+
+fn shout_number(configuration: &[VecDeque<u32>]) -> u64 {
+    configuration
+        .iter()
+        .map(|col| col.front().unwrap())
+        .fold(0, |acc, &n| acc * (10u64.pow(n / 10 + 1)) + u64::from(n))
 }
 
 pub fn solve_part_1(input: &str) -> SolverResult {
@@ -61,10 +69,26 @@ pub fn solve_part_1(input: &str) -> SolverResult {
         perform_round(&mut configuration, i)?;
     }
 
-    let number = configuration
-        .iter()
-        .map(|col| col.front().unwrap())
-        .join("");
+    Ok(Box::new(shout_number(&configuration)))
+}
 
-    Ok(Box::new(number))
+pub fn solve_part_2(input: &str) -> SolverResult {
+    let mut configuration = run_parser(parse_dance, input)?;
+    let mut seen = HashMap::<u64, u32>::new();
+    let mut round: usize = 0;
+
+    let number = loop {
+        perform_round(&mut configuration, round)?;
+
+        let number = shout_number(&configuration);
+        match seen.get(&number) {
+            Some(&count) if count == 2024 - 1 => break number,
+            Some(&count) => seen.insert(number, count + 1),
+            None => seen.insert(number, 1)
+        };
+
+        round += 1;
+    };
+
+    Ok(Box::new(number * (round as u64 + 1)))
 }
