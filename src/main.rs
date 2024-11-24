@@ -1,5 +1,7 @@
 #![feature(
-    iter_array_chunks
+    iter_array_chunks,
+    unsigned_is_multiple_of,
+    impl_trait_in_assoc_type
 )]
 
 use std::{collections::HashMap, error::Error, fs::File};
@@ -31,7 +33,6 @@ macro_rules! solver {
 }
 
 struct Manifests;
-
 impl ManifestProvider for Manifests {
     fn get_manifest(day: Day) -> Result<DayManifest, Box<dyn Error>> {
         let path = format!("data/{}/day_{:02}.yaml", day.year, day.day);
@@ -43,12 +44,12 @@ impl ManifestProvider for Manifests {
 
 fn main() {
     let options = jikan::ExecutionOptions::from_args();
-
     let solvers: HashMap<Puzzle, Solver> = [
         solver!(2024, "01"),
         solver!(2024, "02"),
         solver!(2024, "03"),
-        solver!(2024, "04")
+        solver!(2024, "04"),
+        solver!(2024, "05", 1)
     ].into_iter()
         .flatten()
         .collect();
