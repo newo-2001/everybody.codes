@@ -1,8 +1,9 @@
-use std::collections::VecDeque;
+use std::{cmp::max, collections::VecDeque};
 
-use ahash::{HashMap, HashMapExt};
+use ahash::{HashMap, HashMapExt, HashSet, HashSetExt};
 use anyhow::{anyhow, Result};
 use everybody_helps::{iterators::ExtraIter, parsing::{run_parser, ParsingResult}, spatial::matrix::Matrix};
+use itertools::Itertools;
 use nom::{character::complete::{line_ending, space1, u32}, combinator::map_res, multi::separated_list1, Parser};
 
 use crate::SolverResult;
@@ -59,7 +60,9 @@ fn shout_number(configuration: &[VecDeque<u32>]) -> u64 {
     configuration
         .iter()
         .map(|col| col.front().unwrap())
-        .fold(0, |acc, &n| acc * (10u64.pow(n / 10 + 1)) + u64::from(n))
+        .join("")
+        .parse()
+        .unwrap()
 }
 
 pub fn solve_part_1(input: &str) -> SolverResult {
@@ -91,4 +94,25 @@ pub fn solve_part_2(input: &str) -> SolverResult {
     };
 
     Ok(Box::new(number * (round as u64 + 1)))
+}
+
+pub fn solve_part_3(input: &str) -> SolverResult {
+    let mut states = HashSet::<(usize, Vec<VecDeque<u32>>)>::new();
+    let mut configuration = run_parser(parse_dance, input)?;
+    let mut largest: Option<u64> = None;
+
+    for round in 0.. {
+        perform_round(&mut configuration, round)?;
+
+        let number = shout_number(&configuration);
+        largest = Some(largest.map_or(number, |largest| max(largest, number)));
+
+        let col = round % configuration.len();
+        let state = (col, configuration.clone());
+        if !states.insert(state) {
+            return Ok(Box::new(largest.unwrap()))
+        };
+    };
+
+    unreachable!();
 }
