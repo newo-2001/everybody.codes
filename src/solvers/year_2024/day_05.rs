@@ -2,7 +2,7 @@ use std::{cmp::max, collections::VecDeque};
 
 use ahash::{HashMap, HashMapExt, HashSet, HashSetExt};
 use anyhow::{anyhow, Result};
-use everybody_helps::{iterators::ExtraIter, parsing::{run_parser, ParsingResult}, spatial::matrix::Matrix};
+use yuki::{iterators::ExtraIter, parsing::{run_parser, ParsingResult}, spatial::matrix::Matrix};
 use itertools::Itertools;
 use nom::{character::complete::{line_ending, space1, u32}, combinator::map_res, multi::separated_list1, Parser};
 

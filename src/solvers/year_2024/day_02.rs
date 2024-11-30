@@ -1,5 +1,5 @@
 use crate::SolverResult;
-use everybody_helps::{iterators::ExtraIter, parsing::{run_parser, ParsingResult}, spatial::{matrix::Matrix, Point}};
+use yuki::{iterators::ExtraIter, parsing::{run_parser, ParsingResult}, spatial::{matrix::Matrix, Point}};
 use itertools::Itertools;
 use nom::{bytes::complete::tag, character::complete::{alpha1, char, line_ending}, combinator::rest, multi::{count, separated_list0}, sequence::{preceded, separated_pair}, Parser};
 

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use everybody_helps::{iterators::ExtraIter, parsing::run_parser, spatial::{direction::{self, Directions}, matrix::Matrix}};
+use yuki::{iterators::ExtraIter, parsing::run_parser, spatial::{direction::{self, Directions}, matrix::Matrix}};
 use nom::{branch::alt, character::complete::{line_ending, char}, combinator::value, multi::{many1, separated_list0}};
 
 use crate::SolverResult;

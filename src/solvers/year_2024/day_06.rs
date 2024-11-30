@@ -1,10 +1,10 @@
 use std::{collections::VecDeque, fmt::Display, iter::once};
 
 use ahash::HashMap;
-use anyhow::{anyhow, Context};
-use everybody_helps::parsing::{parse, Parsable, ParsingResult};
+use anyhow::{anyhow, Context, Result};
 use itertools::Itertools;
 use nom::{character::complete::{alpha1, char, line_ending}, combinator::{map, value}, multi::separated_list1, sequence::separated_pair, Parser};
+use yuki::parsing::{parse, Parsable, ParsingResult};
 
 use crate::SolverResult;
 
@@ -113,21 +113,37 @@ impl<'a> Tree<'a> {
         let queue = once((Child::Node(ROOT), Path::default())).collect();
         FruitIterator { queue, tree: self }
     }
+
+    fn most_powerful_fruit(&self) -> Result<Path<'a>> {
+        self
+            .fruits()
+            .map(|path| (path.0.len(), path))
+            .into_group_map()
+            .into_values()
+            .min_by_key(Vec::len)
+            .context("No fruits in input")?
+            .into_iter()
+            .exactly_one()
+            .map_err(|err| anyhow!(err.to_string()))
+    }
 }
 
-pub fn solve_part_1<'a>(input: &'a str) -> SolverResult {
-    let tree: Tree<'a> = parse(input)?;
-
-    let path = tree
-        .fruits()
-        .map(|path| (path.0.len(), path))
-        .into_group_map()
-        .into_values()
-        .min_by_key(Vec::len)
-        .context("No fruits in input")?
-        .into_iter()
-        .exactly_one()
-        .map_err(|err| anyhow!(err.to_string()))?;
-
+pub fn solve_part_1(input: &str) -> SolverResult {
+    let tree: Tree = parse(input)?;
+    let path = tree.most_powerful_fruit()?;
     Ok(Box::new(path.to_string()))
+}
+
+pub fn solve_part_2(input: &str) -> SolverResult {
+    let tree: Tree = parse(input)?;
+    let path = tree.most_powerful_fruit()?.0
+        .into_iter()
+        .filter_map(|str| str.chars().next())
+        .join("");
+
+    Ok(Box::new(path))
+}
+
+pub fn solve_part_3(input: &str) -> SolverResult {
+    solve_part_2(input)
 }

@@ -201,14 +201,13 @@ version = "0.1.0"
 dependencies = [
  "ahash",
  "anyhow",
- "derive_more",
  "itertools",
  "jikan",
  "nom",
- "num-traits",
  "paste",
  "serde_yml",
  "thiserror 2.0.3",
+ "yuki",
 ]
 
 [[package]]
@@ -641,6 +640,18 @@ name = "windows_x86_64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
+
+[[package]]
+name = "yuki"
+version = "0.1.0"
+source = "git+https://github.com/newo-2001/yuki#21fb52a51f69fc79c6ab20aed179775cb7596d4b"
+dependencies = [
+ "derive_more",
+ "itertools",
+ "nom",
+ "num-traits",
+ "thiserror 2.0.3",
+]
 
 [[package]]
 name = "zerocopy"
